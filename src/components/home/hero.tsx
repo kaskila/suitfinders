@@ -1,28 +1,40 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { Container } from "@/components/container";
 
 function Hero() {
   return (
     <section className="border-b border-border bg-background">
-      <Container className="flex flex-col items-start gap-8 py-20 sm:py-28 lg:py-36">
-        <h1 className="max-w-3xl font-heading text-4xl leading-tight text-foreground sm:text-5xl lg:text-6xl">
-          The suit you&apos;re looking for is already in Lusaka.
-        </h1>
-        <p className="max-w-xl text-lg text-muted-foreground">
-          Browse suits from tailors, boutiques and importers across the city.
-          Can&apos;t find it? Tell us what you want and we&apos;ll go and find it.
-        </p>
-        <div className="flex flex-col gap-4 sm:flex-row">
-          <Button asChild size="lg" className="h-12 px-8 text-base">
-            <Link href="/suits">Find a Suit</Link>
-          </Button>
-          <Button asChild variant="outline" size="lg" className="h-12 px-8 text-base">
-            <Link href="/request">Request a Suit</Link>
-          </Button>
+      <div className="grid grid-cols-1 md:grid-cols-2 md:items-stretch">
+        <div className="relative order-1 aspect-4/5 w-full md:order-2 md:aspect-auto md:min-h-128">
+          <Image
+            src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=1200&auto=format&fit=crop"
+            alt="Man wearing a tailored black suit jacket, outdoors"
+            fill
+            priority
+            sizes="(min-width: 768px) 50vw, 100vw"
+            className="object-cover"
+          />
         </div>
-      </Container>
+        <div className="order-2 flex flex-col items-start justify-center gap-8 px-4 py-16 sm:px-6 sm:py-20 md:order-1 md:px-8 md:py-0 lg:px-12">
+          <h1 className="max-w-xl font-heading text-4xl leading-tight text-foreground sm:text-5xl lg:text-6xl">
+            The suit you&apos;re looking for is already in Lusaka.
+          </h1>
+          <p className="max-w-xl text-lg text-muted-foreground">
+            Browse suits from tailors, boutiques and importers across the city.
+            Can&apos;t find it? Tell us what you want and we&apos;ll go and find it.
+          </p>
+          <div className="flex flex-col gap-4 sm:flex-row">
+            <Button asChild size="lg" className="h-12 px-8 text-base">
+              <Link href="/suits">Find a Suit</Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="h-12 px-8 text-base">
+              <Link href="/request">Request a Suit</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }

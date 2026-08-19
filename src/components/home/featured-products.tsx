@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { Container } from "@/components/container";
 import { SectionHeading } from "@/components/section-heading";
-import { ProductCard } from "@/components/home/product-card";
+import { ProductCard } from "@/components/product-card";
 import { getFeaturedProducts } from "@/lib/data/products";
 
 async function FeaturedProducts() {
