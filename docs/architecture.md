@@ -43,11 +43,17 @@ protected data or actions — never inferred from client state.
   (`User`), and its permissions are derived from which domain profile
   (Customer, Admin, Vendor) that User holds — never from a client-sent
   role/flag.
-- Admin-only operations (catalog management, vendor management, order
-  review) are authorized server-side before any mutation runs.
+- Admin-only operations (catalog management, vendor management, custom
+  request review) are authorized server-side before any mutation runs.
 - Vendor visibility rules (inactive vendors' products excluded from the
   catalog, not newly publishable) are enforced in the server-side data
   access layer, not in the UI.
+- Public request submission (`CustomRequest`) is unauthenticated by
+  design — a buyer does not need a session to submit one (see
+  domain-model.md's Authentication Scope). Because that boundary is
+  reachable by anyone, it must rate-limit and validate server-side; the
+  Zod validation also used client-side in the form is a courtesy for
+  the buyer, not a control the server can rely on.
 
 ## Validation Boundaries
 

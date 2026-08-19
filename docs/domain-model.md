@@ -12,28 +12,41 @@ relationships, and the constraints that keep the data trustworthy.
 The MVP supports:
 
 - Browsing a catalog of suits (products, variants, categories, brands).
-- Placing standard orders against catalog products.
-- Submitting custom/bespoke suit requests with reference images and
-  structured measurements.
+- Submitting a request for a suit — either a specific catalog product
+  or something bespoke — with reference images and structured
+  measurements. Both cases are the same business event (a buyer telling
+  us what they want) and go through a single request pipeline; see
+  CustomRequest under Custom Orders below.
 - Vendor-sourced products, managed by admins.
 
-The MVP deliberately excludes payments processing, reviews, wishlists,
-coupons, notifications, chat, and analytics event tracking. These may be
-introduced later but are not part of the current domain model (see
-Deliberate Exclusions).
+The MVP deliberately excludes order placement and payments processing,
+reviews, wishlists, coupons, notifications, chat, and analytics event
+tracking. These may be introduced later but are not part of the current
+domain model (see Deliberate Exclusions).
 
 ## Actors
 
-- **Customer** — browses the catalog, places orders, submits custom
-  requests.
+- **Customer** — a domain profile for a person who has an account and
+  can submit requests through it. An account is not required to submit
+  a request at launch — see Authentication Scope below.
 - **Admin** — manages catalog data (products, variants, categories,
-  brands) and vendor records; reviews orders and custom requests.
+  brands) and vendor records; reviews custom requests.
 - **Vendor** — the sourcing/fulfillment party behind a product. Vendor
   accounts do not yet have self-service workflows in the MVP; vendor
   records are managed by admins.
 
-All three actors authenticate through a single identity mechanism (see
-`User` below) but act through distinct domain profiles.
+### Authentication Scope
+
+At launch, authentication exists for **Admins only**. A buyer submits a
+custom request without an account or a signup step: a signup wall
+between a buyer and a request loses the lead, and for Zambian buyers
+arriving from social channels on mobile data, an account requirement is
+friction with no corresponding benefit at this stage.
+
+Customer — and its link to `User` — is retained in the model for a
+future accounts feature; it is not deleted, simply not exercised by the
+public request flow today. See CustomRequest under Custom Orders below
+for how an unauthenticated submission is captured.
 
 ## Entities and Responsibilities
 
@@ -50,8 +63,8 @@ or Vendor) to act within the system.
 **Customer**
 A domain profile representing a person who shops and submits custom
 requests. Linked to exactly one User. Holds `phone`, the customer's
-contact phone number (used for order fulfillment contact). Display name
-is not duplicated here — it comes from the linked User's `name`.
+contact phone number. Display name is not duplicated here — it comes
+from the linked User's `name`.
 
 **Admin**
 A domain profile representing internal staff who manage the catalog and
@@ -114,32 +127,53 @@ combination). Owns the searchable, transactional attributes:
 An image belonging to a Product (not to an individual variant, for
 MVP). Stores only an external storage reference, never binary data.
 
-### Transactions
-
-**Order**
-A confirmed purchase by a Customer. Holds status, a total-amount
-snapshot, and a shipping-address snapshot at time of purchase.
-
-**OrderItem**
-A line item within an Order, referencing the ProductVariant purchased.
-Stores immutable snapshots of the product name, variant information
-(size/color), SKU, and price as they were at purchase time — never
-read live from Product/ProductVariant.
-
 ### Custom Orders
 
 **CustomRequest**
-A customer's request for a bespoke suit. Holds status, description,
+The single request pipeline for the platform. "I want this specific
+suit" and "find me something like this" are the same business event —
+a buyer telling us what they want — so both are captured by this one
+entity rather than two parallel models. Holds status, description,
 budget range, and structured measurements as JSON, validated by Zod at
 the application boundary (not enforced by the database schema itself).
-Does not yet carry a link to a resulting Order — conversion from
-request to order is an application-level workflow for MVP, not a
-schema relationship.
+
+A request does not require an authenticated Customer: `customerId` is
+nullable, and the request instead carries its own contact details
+directly (`contactName`, `contactPhone`, `contactWhatsapp`) — see
+Authentication Scope above and Settled Request Payload below.
+
+A request may optionally reference the specific ProductVariant it was
+made about, via a nullable `productVariantId`, covering the "I want
+this specific suit" case without a separate order/inquiry model. See
+Deletion Semantics for the required on-delete behaviour.
 
 **CustomRequestImage**
 A reference image belonging to a CustomRequest (e.g. fabric or fit
 inspiration). Stores only an external storage reference, never binary
 data.
+
+**Settled request payload.** The request shape is defined by the Zod
+schema at `src/lib/validation/request.ts`, written against the real
+submission form — that file is the source of truth for field-level
+detail, not this document. It validates and normalises:
+
+- `contactName` (required)
+- `contactPhone` (required)
+- `contactWhatsapp` (nullable)
+- `description` (required)
+- `size` (nullable)
+- `budgetMin`, `budgetMax` (nullable)
+- `occasion` (nullable) — a fixed set (Wedding, Business, Funeral,
+  Church, Other); this should be an enum in the schema, not free text.
+- `productSlug` — the form's identifier for the product a request
+  refers to; resolved at the application boundary to the
+  `productVariantId` the schema actually stores.
+
+Zod is the validation boundary for this shape, the same principle
+already applied to `CustomRequest.measurements` above. The database
+stores normalised values, not whatever the buyer typed — phone numbers,
+specifically, are stored as `+260XXXXXXXXX` regardless of whether the
+buyer entered `09…`, `260…`, or `+260…`.
 
 ## Relationships and Cardinalities
 
@@ -148,15 +182,13 @@ data.
 | User | Customer | 1 : 0..1 |
 | User | Admin | 1 : 0..1 |
 | User | Vendor | 1 : 0..1 |
-| Customer | Order | 1 : N |
 | Customer | CustomRequest | 1 : N |
 | Vendor | Product | 1 : N |
 | Brand | Product | 1 : N |
 | Product | ProductVariant | 1 : N |
 | Product | Category | N : N (via ProductCategory) |
 | Product | ProductImage | 1 : N |
-| ProductVariant | OrderItem | 1 : N |
-| Order | OrderItem | 1 : N |
+| ProductVariant | CustomRequest | 1 : N |
 | CustomRequest | CustomRequestImage | 1 : N |
 | Category | Category | 1 : N (self-referential, `parentCategoryId`) |
 
@@ -171,9 +203,6 @@ data.
   be assigned to the same category twice.
 - At most one `ProductCategory` row per product may have `isPrimary =
   true`.
-- `OrderItem`'s snapshot fields (product name, variant info, SKU, price)
-  are required and immutable once written — never updated, never
-  re-derived from live catalog data.
 - `ProductImage.storageRef` / `CustomRequestImage.storageRef` are
   non-empty external references only — no binary image data is stored
   in the database. `Brand.logoRef`, when present, follows the same
@@ -182,6 +211,16 @@ data.
 - `CustomRequest.measurements` is a JSON field; structural correctness
   is enforced by Zod validation at the application boundary, not by the
   database.
+- `CustomRequest.customerId` is nullable — a request does not require
+  an authenticated Customer at launch. `CustomRequest.contactName` and
+  `CustomRequest.contactPhone` are required regardless of whether a
+  Customer is linked; `CustomRequest.contactWhatsapp` is nullable.
+  `contactPhone` and `contactWhatsapp`, when present, are stored
+  normalised as `+260XXXXXXXXX`, never in whatever format the buyer
+  typed.
+- `CustomRequest.productVariantId` is nullable.
+- `CustomRequest.occasion`, once added, is a fixed enum (Wedding,
+  Business, Funeral, Church, Other) — not free text.
 - `User.name` is optional.
 - `Customer.phone` is required.
 - `Vendor.businessName` is required; `Vendor.contactInfo` is optional.
@@ -189,7 +228,8 @@ data.
 ## Lifecycle / Status Concepts
 
 - **Product.status**: draft → published → archived. Archived products
-  are never hard-deleted while OrderItem references exist.
+  are never hard-deleted while CustomRequest references (via a
+  variant's `productVariantId`) exist.
 - **ProductVariant.status**: mirrors Product's lifecycle at the
   variant level (e.g. active/archived), independent of Product.status
   where a variant is discontinued but the product line remains.
@@ -198,17 +238,14 @@ data.
   - prevents its products from being newly published;
   - removes/excludes its products from appearing as available catalog
     listings.
-- **Order.status**: represents the fulfillment lifecycle of a purchase
-  (e.g. pending → paid → shipped → delivered, with a cancelled branch).
-  Exact state set is an implementation detail, not fixed by this
-  document.
 - **CustomRequest.status**: represents the bespoke-request workflow
   (e.g. submitted → reviewing → quoted → accepted → in progress →
   completed, with a cancelled branch). Exact state set is an
   implementation detail, not fixed by this document.
 - **Archiving over deletion**: Products and ProductVariants are
   soft-deleted/archived rather than hard-deleted whenever historical
-  references (OrderItems) exist, preserving order history integrity.
+  references (CustomRequests that named them) exist, preserving
+  request history integrity.
 
 ## Deletion Semantics
 
@@ -241,23 +278,23 @@ reassigning or archiving) rather than resolved implicitly by a
 cascading delete:
 
 - `Customer.userId`, `Admin.userId`, `Vendor.userId` — a profile row is
-  a distinct domain record (orders, custom requests, vendor products)
-  built on top of a User; deleting the User out from under it would
-  silently orphan that domain history instead of forcing an explicit
-  decision about it.
+  a distinct domain record (custom requests, vendor products) built on
+  top of a User; deleting the User out from under it would silently
+  orphan that domain history instead of forcing an explicit decision
+  about it.
 - `Product.brandId`, `Product.vendorId` — a Brand or Vendor backing
   live or historical products must not be deletable while products
-  still reference it; removing it would leave catalog and order data
-  pointing at nothing.
+  still reference it; removing it would leave catalog data pointing at
+  nothing.
 - `ProductCategory.categoryId` — a Category in use by at least one
   product must not be deletable; doing so would break catalog
   browsing and any canonical URL relying on that category as primary.
 - `ProductVariant.productId` — a variant may be referenced by
-  `OrderItem` history (indirectly, via order snapshots referencing the
-  variant) even after its Product line is discontinued; the Product
-  row must remain in place for as long as any of its variants do (see
-  Archiving over deletion, above — this is why archiving, not
-  deletion, is the mechanism for retiring a Product).
+  CustomRequest history (via its optional `productVariantId`) even
+  after its Product line is discontinued; the Product row must remain
+  in place for as long as any of its variants do (see Archiving over
+  deletion, above — this is why archiving, not deletion, is the
+  mechanism for retiring a Product).
 - `CustomRequest.customerId` — a Customer with submitted custom
   requests must not be deletable while those requests exist, so that
   request history is never silently discarded.
@@ -271,18 +308,17 @@ than load-bearing for the child's integrity:
 - `Category.parentCategoryId` — a subcategory does not stop being a
   valid category if its parent category is removed; it simply becomes
   a top-level category rather than being deleted or blocked.
-- `OrderItem.productVariantId` — order history must survive variant
-  deletion. `OrderItem` already stores immutable snapshots of the
-  variant's name, size/color, SKU, and price at purchase time, so the
-  live reference is a convenience link, not the source of truth; it is
-  safe, and correct, for it to go null rather than block the deletion
-  or cascade one.
+- `CustomRequest.productVariantId` — a request must survive the
+  deletion of the variant that inspired it, exactly as order history
+  had to; the reference goes null rather than blocking the deletion or
+  cascading one.
 
 ## Deliberate Exclusions
 
 The following are intentionally **not** part of the MVP domain model and
 must not be introduced without a separate decision:
 
+- Order and OrderItem (see note below)
 - Payment
 - Review
 - Wishlist
@@ -290,9 +326,9 @@ must not be introduced without a separate decision:
 - Notification
 - Chat
 - AnalyticsEvent
-- A standalone Address entity (addresses are snapshotted onto Order,
-  not modeled independently, for MVP)
-- A `resultingOrderId` link from CustomRequest to Order
+- A standalone Address entity (addresses were snapshotted onto Order;
+  with Order removed, address capture is not part of the MVP domain at
+  all, not merely unmodeled)
 - Per-variant images (images are Product-level only for MVP)
 - Self-service vendor accounts/workflows (vendors are admin-managed for
   MVP)
@@ -300,6 +336,27 @@ must not be introduced without a separate decision:
   enum) — all admins currently share one authorization scope
 - A structured/multi-field Vendor contact record — `Vendor.contactInfo`
   is a single free-text field for MVP
+
+Order and OrderItem, present in an earlier version of this model, have
+been removed rather than kept in a payments-less form. Payments are out
+of scope for launch, and an order with no payment attached is a lead
+with extra tables: the Order shape a real payments integration needs —
+payment status, a mobile money reference, a settlement record, a refund
+path — is not the shape modeled today, so retaining today's Order
+preserves nothing between now and then. The migration to a
+payment-aware Order happens either way, built from CustomRequest data,
+not from today's Order rows.
+
+The immutable-snapshot pattern OrderItem used — `productNameSnapshot`,
+`skuSnapshot`, `variantSnapshot`, `unitPriceSnapshot` — is a retained
+design principle for that future work, not a discarded one. It was
+correct, and a payments-era OrderItem (or its equivalent) should use it
+again.
+
+Removing OrderItem also removes the only SET NULL relation that existed
+apart from `Category.parentCategoryId`, which was — at that point — the
+sole SET NULL relation in the model. A new one is introduced by the
+CustomRequest.productVariantId decision above; see Deletion Semantics.
 
 The specific authentication provider (custom credentials vs. a hosted
 provider) is not decided by this document — it will be selected later
