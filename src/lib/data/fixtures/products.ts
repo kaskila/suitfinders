@@ -58,8 +58,7 @@ export const products: ProductFixture[] = [
     vendor: { businessName: "Cairo Road Menswear" },
     category: { name: "Two-Piece Suits", slug: "two-piece-suits" },
     images: [
-      img("prod_01_img_1", "1594938298603-c8148c4dae35", "Model wearing a charcoal two-piece suit", 0),
-      img("prod_01_img_2", "1507003211169-0a1dd7228f2d", "Charcoal suit jacket detail", 1),
+      img("prod_01_img_1", "1621062089461-01f1eaebb66c", "Man wearing a charcoal grey two-piece suit", 0),
     ],
     variants: [
       { id: "prod_01_v_38r", size: "38R", color: "Charcoal", sku: "ZTC-CH2P-38R", price: 1850, stock: 4 },
@@ -79,7 +78,7 @@ export const products: ProductFixture[] = [
     vendor: { businessName: "Manda Hill Suiting Co." },
     category: { name: "Business Suits", slug: "business-suits" },
     images: [
-      img("prod_02_img_1", "1617127365659-c47fa864d8bc", "Model wearing a navy business suit", 0),
+      img("prod_02_img_1", "1617137968427-85924c800a22", "Man wearing a navy blue business suit", 0),
     ],
     variants: [
       { id: "prod_02_v_38r", size: "38R", color: "Navy", sku: "LG-NVBS-38R", price: 2400, stock: 3 },
@@ -98,8 +97,7 @@ export const products: ProductFixture[] = [
     vendor: { businessName: "Foxdale Bespoke" },
     category: { name: "Wedding Suits", slug: "wedding-suits" },
     images: [
-      img("prod_03_img_1", "1571908599407-cdb918ed83bf", "Model wearing an ivory wedding suit", 0),
-      img("prod_03_img_2", "1519085360753-af0119f7cbe7", "Ivory suit lapel detail", 1),
+      img("prod_03_img_1", "1693071093573-9e8e342aebeb", "Man wearing an ivory/cream formal suit", 0),
     ],
     variants: [
       { id: "prod_03_v_40r", size: "40R", color: "Ivory", sku: "FB-IVWS-40R", price: 4200, stock: 2 },
@@ -118,7 +116,7 @@ export const products: ProductFixture[] = [
     vendor: { businessName: "Chilenje Custom Cuts" },
     category: { name: "Tuxedos", slug: "tuxedos" },
     images: [
-      img("prod_04_img_1", "1622519407650-3df9883f76a5", "Model wearing a black tuxedo", 0),
+      img("prod_04_img_1", "1755537131223-7c1b667696fd", "Man wearing a black tuxedo with a bow tie", 0),
     ],
     variants: [
       { id: "prod_04_v_38r", size: "38R", color: "Black", sku: "CC-BKTX-38R", price: 3600, stock: 0 },
@@ -138,7 +136,7 @@ export const products: ProductFixture[] = [
     vendor: { businessName: "Great East Road Formalwear" },
     category: { name: "Blazers", slug: "blazers" },
     images: [
-      img("prod_05_img_1", "1552374196-c4e7ffc6e126", "Model wearing a tan linen blazer", 0),
+      img("prod_05_img_1", "1633193020624-67cd4dc6efcf", "Man wearing a tan linen-blend blazer", 0),
     ],
     variants: [
       { id: "prod_05_v_38r", size: "38R", color: "Tan", sku: "SF-TNBL-38R", price: 1200, stock: 7 },
@@ -156,8 +154,7 @@ export const products: ProductFixture[] = [
     vendor: { businessName: "Kabwata Tailors" },
     category: { name: "Three-Piece Suits", slug: "three-piece-suits" },
     images: [
-      img("prod_06_img_1", "1489987707025-afc232f7ea0f", "Model wearing a slate grey three-piece suit", 0),
-      img("prod_06_img_2", "1593032465175-481ac7f401a0", "Tailor fitting a grey suit", 1),
+      img("prod_06_img_1", "1784817552041-5f7d793a92d3", "Man wearing a grey suit", 0),
     ],
     variants: [
       { id: "prod_06_v_36r", size: "36R", color: "Slate Grey", sku: "ZTC-SG3P-36R", price: 2650, stock: 2 },
@@ -177,7 +174,7 @@ export const products: ProductFixture[] = [
     vendor: { businessName: "Munda Wear" },
     category: { name: "Tuxedos", slug: "tuxedos" },
     images: [
-      img("prod_07_img_1", "1610030469983-98e550d6193c", "Model wearing a midnight blue tuxedo", 0),
+      img("prod_07_img_1", "1689620471599-7be7db37e082", "Man wearing a navy blue tuxedo", 0),
     ],
     variants: [
       { id: "prod_07_v_40r", size: "40R", color: "Midnight Blue", sku: "MW-MBTX-40R", price: 3950, stock: 1 },
@@ -196,7 +193,7 @@ export const products: ProductFixture[] = [
     vendor: { businessName: "Kariba Tailoring" },
     category: { name: "Two-Piece Suits", slug: "two-piece-suits" },
     images: [
-      img("prod_08_img_1", "1516257984-b1b4d707412e", "Model wearing an olive two-piece suit", 0),
+      img("prod_08_img_1", "1712773663106-bcad3c446544", "Man wearing an olive green suit", 0),
     ],
     variants: [
       { id: "prod_08_v_38r", size: "38R", color: "Olive", sku: "KT-OL2P-38R", price: 1650, stock: 3 },
@@ -215,7 +212,7 @@ export const products: ProductFixture[] = [
     vendor: { businessName: "Cairo Road Menswear" },
     category: { name: "Blazers", slug: "blazers" },
     images: [
-      img("prod_09_img_1", "1552664730-d307ca884978", "Model wearing a burgundy velvet blazer", 0),
+      img("prod_09_img_1", "1593032580308-d4bafafc4f28", "Man wearing a burgundy blazer", 0),
     ],
     variants: [
       { id: "prod_09_v_38r", size: "38R", color: "Burgundy", sku: "LG-BGBL-38R", price: 1550, stock: 0 },
@@ -233,8 +230,7 @@ export const products: ProductFixture[] = [
     vendor: { businessName: "Foxdale Bespoke" },
     category: { name: "Wedding Suits", slug: "wedding-suits" },
     images: [
-      img("prod_10_img_1", "1507003211169-0a1dd7228f2d", "Model wearing a stone grey wedding suit", 0),
-      img("prod_10_img_2", "1594938298603-c8148c4dae35", "Stone grey suit detail", 1),
+      img("prod_10_img_1", "1773688189505-f92d103f7860", "Man wearing a light grey suit", 0),
     ],
     variants: [
       { id: "prod_10_v_40r", size: "40R", color: "Stone Grey", sku: "FB-SGWS-40R", price: 3100, stock: 2 },
@@ -254,7 +250,7 @@ export const products: ProductFixture[] = [
     vendor: { businessName: "Kabwata Tailors" },
     category: { name: "Business Suits", slug: "business-suits" },
     images: [
-      img("prod_11_img_1", "1617127365659-c47fa864d8bc", "Model wearing a brown check suit", 0),
+      img("prod_11_img_1", "1593032329353-5c93d539ffe2", "Man wearing a brown check blazer", 0),
     ],
     variants: [
       { id: "prod_11_v_40r", size: "40R", color: "Brown Check", sku: "ZTC-BRCH-40R", price: 2100, stock: 2 },
@@ -272,7 +268,7 @@ export const products: ProductFixture[] = [
     vendor: { businessName: "Great East Road Formalwear" },
     category: { name: "Two-Piece Suits", slug: "two-piece-suits" },
     images: [
-      img("prod_12_img_1", "1519085360753-af0119f7cbe7", "Model wearing a classic black two-piece suit", 0),
+      img("prod_12_img_1", "1618886614638-80e3c103d31a", "Man wearing a plain black two-piece suit", 0),
     ],
     variants: [
       { id: "prod_12_v_38r", size: "38R", color: "Black", sku: "SF-BK2P-38R", price: 850, stock: 0 },
