@@ -5,19 +5,19 @@ import { Button } from "@/components/ui/button";
 
 function Hero() {
   return (
-    <section className="border-b border-border bg-background">
-      <div className="grid grid-cols-1 md:grid-cols-2 md:items-stretch">
-        <div className="relative order-1 aspect-4/5 w-full md:order-2 md:aspect-auto md:min-h-128">
+    <section className="border-b border-border bg-background md:-mt-16">
+      <div className="grid grid-cols-1 md:grid-cols-2 md:items-start">
+        <div className="relative order-1 aspect-4/5 w-full md:order-2 md:aspect-auto md:h-144">
           <Image
-            src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=1200&auto=format&fit=crop"
-            alt="Man wearing a tailored black suit jacket, outdoors"
+            src="https://images.unsplash.com/photo-1665495005618-6f55e5f77a07?q=80&w=1200&auto=format&fit=crop"
+            alt="Man in a grey tweed suit, smiling"
             fill
             priority
             sizes="(min-width: 768px) 50vw, 100vw"
-            className="object-cover"
+            className="object-cover object-[50%_18%]"
           />
         </div>
-        <div className="order-2 flex flex-col items-start justify-center gap-8 px-4 py-16 sm:px-6 sm:py-20 md:order-1 md:px-8 md:py-0 lg:px-12">
+        <div className="order-2 flex flex-col items-start justify-center gap-8 px-4 py-16 sm:px-6 sm:py-20 md:order-1 md:justify-start md:px-8 md:py-0 md:pt-36 md:pb-12 lg:px-12 lg:pt-40">
           <h1 className="max-w-xl font-heading text-4xl leading-tight text-foreground sm:text-5xl lg:text-6xl">
             The suit you&apos;re looking for is already in Lusaka.
           </h1>

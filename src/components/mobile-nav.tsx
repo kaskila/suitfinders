@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/sheet";
 import { NAV_LINKS } from "@/lib/nav-links";
 
-function MobileNav() {
+function MobileNav({ triggerClassName = "size-11 md:hidden" }: { triggerClassName?: string }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -25,7 +25,7 @@ function MobileNav() {
           variant="ghost"
           size="icon"
           aria-label="Open menu"
-          className="size-11 md:hidden"
+          className={triggerClassName}
         >
           <Menu aria-hidden="true" />
         </Button>
