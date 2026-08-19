@@ -47,6 +47,9 @@ Keep responsibilities separated:
 - Validation schemas define and validate external input.
 - Database access is centralized.
 - Authentication and authorization are enforced server-side.
+- No component may import from `src/lib/data/fixtures/`. Components only
+  call the async getters in `src/lib/data/*` — that boundary is what lets
+  fixtures be swapped for Prisma queries without touching any component.
 
 ## Security
 
