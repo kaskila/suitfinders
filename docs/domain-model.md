@@ -210,6 +210,74 @@ data.
   soft-deleted/archived rather than hard-deleted whenever historical
   references (OrderItems) exist, preserving order history integrity.
 
+## Deletion Semantics
+
+Every required foreign key has an explicit on-delete behavior, chosen
+per relationship rather than left at a framework default. The
+governing question for each relationship is: does the child row have
+any meaning once its parent is gone?
+
+### CASCADE — child has no independent existence
+
+A row is deleted along with its parent when the row is purely a
+dependent fragment of that parent — it is never referenced from
+anywhere else and carries no meaning on its own:
+
+- `ProductImage.productId` — an image exists only to depict its
+  Product; there is nothing for it to depict once the Product is gone.
+- `CustomRequestImage.customRequestId` — the same reasoning applies to
+  a custom request's reference images.
+- `ProductCategory.productId` — a catalog-assignment row is meaningless
+  without the product being categorized; deleting the Product should
+  not leave orphaned assignment rows behind.
+
+### RESTRICT — deliberately preserved
+
+A parent cannot be deleted while dependent rows exist when doing so
+would either silently discard data that must remain auditable/intact,
+or would silently break something else still relying on the parent.
+RESTRICT forces that conflict to be resolved explicitly (e.g. by
+reassigning or archiving) rather than resolved implicitly by a
+cascading delete:
+
+- `Customer.userId`, `Admin.userId`, `Vendor.userId` — a profile row is
+  a distinct domain record (orders, custom requests, vendor products)
+  built on top of a User; deleting the User out from under it would
+  silently orphan that domain history instead of forcing an explicit
+  decision about it.
+- `Product.brandId`, `Product.vendorId` — a Brand or Vendor backing
+  live or historical products must not be deletable while products
+  still reference it; removing it would leave catalog and order data
+  pointing at nothing.
+- `ProductCategory.categoryId` — a Category in use by at least one
+  product must not be deletable; doing so would break catalog
+  browsing and any canonical URL relying on that category as primary.
+- `ProductVariant.productId` — a variant may be referenced by
+  `OrderItem` history (indirectly, via order snapshots referencing the
+  variant) even after its Product line is discontinued; the Product
+  row must remain in place for as long as any of its variants do (see
+  Archiving over deletion, above — this is why archiving, not
+  deletion, is the mechanism for retiring a Product).
+- `CustomRequest.customerId` — a Customer with submitted custom
+  requests must not be deletable while those requests exist, so that
+  request history is never silently discarded.
+
+### SET NULL — already correct, reasoning recorded
+
+A reference is nulled out on parent deletion when the child remains
+meaningful on its own and the relationship is informational rather
+than load-bearing for the child's integrity:
+
+- `Category.parentCategoryId` — a subcategory does not stop being a
+  valid category if its parent category is removed; it simply becomes
+  a top-level category rather than being deleted or blocked.
+- `OrderItem.productVariantId` — order history must survive variant
+  deletion. `OrderItem` already stores immutable snapshots of the
+  variant's name, size/color, SKU, and price at purchase time, so the
+  live reference is a convenience link, not the source of truth; it is
+  safe, and correct, for it to go null rather than block the deletion
+  or cascade one.
+
 ## Deliberate Exclusions
 
 The following are intentionally **not** part of the MVP domain model and
