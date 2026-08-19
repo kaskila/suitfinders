@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Container } from "@/components/container";
+import { NAV_LINKS } from "@/lib/nav-links";
 
 function SiteFooter() {
   return (
@@ -14,22 +15,16 @@ function SiteFooter() {
         </div>
         <nav aria-label="Footer">
           <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
-            <li>
-              <Link
-                href="/about"
-                className="outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                About
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/custom-orders"
-                className="outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                Custom Orders
-              </Link>
-            </li>
+            {NAV_LINKS.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  className="outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
           </ul>
         </nav>
         <p className="text-xs text-muted-foreground">

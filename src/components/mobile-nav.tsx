@@ -25,7 +25,7 @@ function MobileNav() {
           variant="ghost"
           size="icon"
           aria-label="Open menu"
-          className="md:hidden"
+          className="size-11 md:hidden"
         >
           <Menu aria-hidden="true" />
         </Button>
