@@ -14,6 +14,8 @@
  */
 import { createHash } from "node:crypto";
 
+import { storageRefToUrl } from "@/lib/data/storage";
+
 const UPLOAD_FOLDER = "suitfinders/products";
 const ALLOWED_FORMATS = ["jpg", "jpeg", "png", "webp"];
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
@@ -67,7 +69,7 @@ export async function createSignedUpload(): Promise<SignedUploadPayload> {
 }
 
 export type VerifyUploadResult =
-  | { ok: true; bytes: number; format: string }
+  | { ok: true; bytes: number; format: string; url: string }
   | { ok: false; error: string };
 
 /**
@@ -103,7 +105,7 @@ export async function verifyUploadedAsset(publicId: string): Promise<VerifyUploa
     };
   }
 
-  return { ok: true, bytes: asset.bytes, format: asset.format };
+  return { ok: true, bytes: asset.bytes, format: asset.format, url: storageRefToUrl(publicId) };
 }
 
 /** Permanently removes an asset from Cloudinary. */
