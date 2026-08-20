@@ -24,33 +24,50 @@ const TRUST_ITEMS = [
 
 function Hero() {
   return (
-    <section className="relative flex flex-col bg-[#211c17] lg:flex-row">
-      <div className="relative order-first aspect-[1755/896] w-full lg:order-2 lg:aspect-auto lg:w-[45%] lg:shrink-0">
-        <Image
-          src="/suitfinder_hero.webp"
-          alt="Suit rail, mannequin in a tailored suit, and shoes on display in a Lusaka boutique"
-          fill
-          priority
-          sizes="(min-width: 1024px) 45vw, 100vw"
-          className="object-cover object-[58%_30%]"
-        />
-        {/* Soft fade so the image doesn't meet the content column as a hard edge. */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 left-0 hidden w-32 bg-gradient-to-r from-[#211c17] to-transparent lg:block xl:w-40"
-        />
-      </div>
+    <section className="relative isolate overflow-hidden bg-[#211c17]">
+      <Image
+        src="/suitfinders_hero.webp"
+        alt="Suit rail, mannequin in a tailored suit, and shoes on display in a Lusaka boutique"
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover object-[40%_38%] lg:object-[54%_38%]"
+      />
 
-      <div className="flex flex-col gap-8 px-4 py-14 pt-24 sm:px-6 sm:py-16 sm:pt-28 lg:order-1 lg:w-[55%] lg:shrink-0 lg:justify-center lg:px-8 lg:py-20 lg:pt-24 xl:px-12">
+      {/* Left-to-right scrim (lg+ only): darkest through ~36%, transparent by ~58%. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 hidden lg:block"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, rgba(33,28,23,0.85) 0%, rgba(33,28,23,0.85) 36%, rgba(33,28,23,0) 58%)",
+        }}
+      />
+      {/* Below lg: copy stacks over the full width, so the scrim must cover it too. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[#211c17]/85 lg:hidden"
+      />
+      {/* Bottom-up gradient behind the trust row. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3"
+        style={{
+          backgroundImage:
+            "linear-gradient(to top, rgba(33,28,23,0.9) 0%, rgba(33,28,23,0.9) 45%, rgba(33,28,23,0) 100%)",
+        }}
+      />
+
+      <div className="relative z-10 flex flex-col gap-8 px-4 py-14 pt-24 sm:px-6 sm:py-16 sm:pt-28 lg:min-h-[85vh] lg:justify-center lg:px-8 lg:py-20 lg:pt-24 xl:px-12">
         <div className="space-y-6">
-          <p className="text-sm font-semibold tracking-widest text-primary uppercase">
+          <p className="inline-block rounded bg-[#211c17]/90 px-3 py-1 -mx-3 text-sm font-semibold tracking-widest text-primary uppercase">
             Find the right fit. Every time.
           </p>
           <h1 className="max-w-xl font-heading text-4xl leading-tight text-[#f8f3ea] sm:text-5xl lg:text-6xl">
             The suit you&apos;re looking for is already in{" "}
             <span className="text-primary">Lusaka.</span>
           </h1>
-          <p className="max-w-xl text-lg text-[#f8f3ea]/80">
+          <p className="max-w-sm text-lg text-[#f8f3ea]/80 lg:max-w-md">
             Browse suits from tailors, boutiques and importers across the city.
             Can&apos;t find it? Tell us what you want and we&apos;ll go and find it.
           </p>
