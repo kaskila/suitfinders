@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 
 function Hero() {
   return (
-    <section className="relative min-h-[85svh] w-full md:min-h-[90svh]">
+    <section className="relative min-h-[78svh] w-full md:min-h-[80svh]">
       <Image
-        src="https://images.unsplash.com/photo-1665495005618-6f55e5f77a07?q=80&w=1600&auto=format&fit=crop"
-        alt="Man in a grey tweed suit, smiling"
+        src="/suitfinder_hero.webp"
+        alt="Suit rail, mannequin in a tailored suit, and shoes on display in a Lusaka boutique"
         fill
         priority
         sizes="100vw"
-        className="object-cover object-[50%_18%]"
+        className="object-cover object-[58%_30%]"
       />
 
       {/*
