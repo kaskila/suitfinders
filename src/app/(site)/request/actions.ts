@@ -1,8 +1,9 @@
 "use server";
 
 import { RequestOccasion } from "@/generated/prisma/enums";
-import { resolveVariantId } from "@/lib/data/products";
+import { getProductBySlug, resolveVariantId } from "@/lib/data/products";
 import { createCustomRequest } from "@/lib/data/requests";
+import { sendRequestNotificationEmail } from "@/lib/notifications/request-email";
 import {
   requestFormSchema,
   type RequestFormInput,
@@ -56,8 +57,9 @@ export async function submitCustomRequest(input: RequestFormInput): Promise<Subm
     }
   }
 
+  let id: string;
   try {
-    const { id } = await createCustomRequest({
+    ({ id } = await createCustomRequest({
       contactName: data.name,
       // Already normalised to +260XXXXXXXXX by the schema's transform.
       contactPhone: data.phone,
@@ -68,8 +70,7 @@ export async function submitCustomRequest(input: RequestFormInput): Promise<Subm
       description: data.description,
       budgetMin: data.budgetMin ?? null,
       budgetMax: data.budgetMax ?? null,
-    });
-    return { ok: true, id };
+    }));
   } catch (error) {
     // Never leak a raw Prisma/database error message to the client.
     console.error("Failed to create custom request:", error);
@@ -78,4 +79,28 @@ export async function submitCustomRequest(input: RequestFormInput): Promise<Subm
       errors: { form: "Something went wrong on our end. Please try again." },
     };
   }
+
+  // Per docs/architecture.md's Request Notification Behaviour: the buyer's
+  // request is already saved above, so a failure here is swallowed rather
+  // than surfaced. It is still awaited inside this try/catch (not fired as
+  // an un-awaited promise) because Vercel may terminate the function
+  // container once the action returns, killing in-flight un-awaited work.
+  try {
+    const product = data.productSlug ? await getProductBySlug(data.productSlug) : null;
+    await sendRequestNotificationEmail({
+      requestId: id,
+      contactName: data.name,
+      contactPhone: data.phone,
+      contactWhatsapp: data.whatsapp ?? null,
+      product: product && data.size ? { name: product.name, size: data.size } : null,
+      occasion: data.occasion ?? null,
+      description: data.description,
+      budgetMin: data.budgetMin ?? null,
+      budgetMax: data.budgetMax ?? null,
+    });
+  } catch (error) {
+    console.error("Failed to send request notification email:", error);
+  }
+
+  return { ok: true, id };
 }
