@@ -9,11 +9,12 @@ import { NAV_LINKS } from "@/lib/nav-links";
 import { cn } from "@/lib/utils";
 
 function SiteHeader() {
-  // The homepage hero is a full-bleed image the header floats over —
+  // The homepage hero is a dark, full-bleed section the header floats over —
   // absolutely positioned so it takes no layout height, transparent, with
   // light text. Every other route keeps the header exactly as it's always
   // been: opaque, dark text, in normal flow, bottom border.
-  const isHome = usePathname() === "/";
+  const pathname = usePathname();
+  const isHome = pathname === "/";
 
   return (
     <header
@@ -35,19 +36,27 @@ function SiteHeader() {
 
         <nav aria-label="Primary" className="hidden md:block">
           <ul className="flex items-center gap-8">
-            {NAV_LINKS.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className={cn(
-                    "text-sm font-medium outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                    isHome ? "text-[#f8f3ea]" : "text-foreground"
-                  )}
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
+            {NAV_LINKS.map((link) => {
+              const isActive =
+                pathname === link.href || pathname.startsWith(`${link.href}/`);
+
+              return (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    aria-current={isActive ? "page" : undefined}
+                    className={cn(
+                      "relative pb-1 text-sm font-medium outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                      isHome ? "text-[#f8f3ea]" : "text-foreground",
+                      isActive &&
+                        "after:absolute after:inset-x-0 after:-bottom-0.5 after:h-0.5 after:rounded-full after:bg-primary after:content-['']"
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
