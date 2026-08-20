@@ -50,6 +50,9 @@ Keep responsibilities separated:
 - No component may import from `src/lib/data/fixtures/`. Components only
   call the async getters in `src/lib/data/*` — that boundary is what lets
   fixtures be swapped for Prisma queries without touching any component.
+- `src/lib/db/prisma.ts` is the only file in the codebase that constructs a
+  `PrismaClient`. Everything else imports the shared `prisma` instance from
+  there.
 
 ## Security
 
