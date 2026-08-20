@@ -4,6 +4,10 @@
  * (email, slug, sku, or a fixed image id standing in for one), so running
  * this twice converges on the same rows instead of duplicating them.
  */
+import crypto from "node:crypto";
+
+import { hashPassword } from "better-auth/crypto";
+
 import { prisma } from "../src/lib/db/prisma";
 import { ProductStatus, VendorStatus } from "../src/generated/prisma/enums";
 
@@ -279,6 +283,61 @@ async function upsertCategory(category: SeedProduct["category"]): Promise<string
   return row.id;
 }
 
+/**
+ * Seeds the one Better Auth admin from ADMIN_EMAIL / ADMIN_PASSWORD.
+ * Written directly against the AdminUser/AdminAccount tables rather than
+ * through auth.api.signUpEmail — sign-up is disabled (see src/lib/auth/auth.ts),
+ * by design, since admins are seeded, not self-registered. The password
+ * hash uses Better Auth's own hasher so the stored value verifies correctly
+ * on sign-in; the plaintext password is never logged.
+ */
+async function seedAdmin() {
+  const email = process.env.ADMIN_EMAIL;
+  const password = process.env.ADMIN_PASSWORD;
+  if (!email || !password) {
+    throw new Error("ADMIN_EMAIL and ADMIN_PASSWORD must be set in .env to seed the admin.");
+  }
+
+  const normalizedEmail = email.toLowerCase();
+  const passwordHash = await hashPassword(password);
+
+  const adminUser = await prisma.adminUser.upsert({
+    where: { email: normalizedEmail },
+    update: {},
+    create: {
+      id: crypto.randomUUID(),
+      email: normalizedEmail,
+      name: "Admin",
+      emailVerified: true,
+    },
+  });
+
+  const existingAccount = await prisma.adminAccount.findFirst({
+    where: { userId: adminUser.id, providerId: "credential" },
+  });
+
+  if (existingAccount) {
+    await prisma.adminAccount.update({
+      where: { id: existingAccount.id },
+      data: { password: passwordHash },
+    });
+  } else {
+    await prisma.adminAccount.create({
+      data: {
+        id: crypto.randomUUID(),
+        userId: adminUser.id,
+        providerId: "credential",
+        // The local (non-OAuth) account identity namespace Better Auth's
+        // sign-in lookup filters on — see createLocalAccountIssuer("credential")
+        // in @better-auth/core's db/schema/account.
+        issuer: "local:credential",
+        accountId: adminUser.id,
+        password: passwordHash,
+      },
+    });
+  }
+}
+
 async function main() {
   const vendorIds = new Map<string, string>();
   const brandIds = new Map<string, string>();
@@ -367,16 +426,27 @@ async function main() {
     }
   }
 
-  const [vendorCount, brandCount, categoryCount, productCount, variantCount, imageCount, productCategoryCount] =
-    await Promise.all([
-      prisma.vendor.count(),
-      prisma.brand.count(),
-      prisma.category.count(),
-      prisma.product.count(),
-      prisma.productVariant.count(),
-      prisma.productImage.count(),
-      prisma.productCategory.count(),
-    ]);
+  await seedAdmin();
+
+  const [
+    vendorCount,
+    brandCount,
+    categoryCount,
+    productCount,
+    variantCount,
+    imageCount,
+    productCategoryCount,
+    adminUserCount,
+  ] = await Promise.all([
+    prisma.vendor.count(),
+    prisma.brand.count(),
+    prisma.category.count(),
+    prisma.product.count(),
+    prisma.productVariant.count(),
+    prisma.productImage.count(),
+    prisma.productCategory.count(),
+    prisma.adminUser.count(),
+  ]);
 
   console.log("Seed complete. Row counts:");
   console.table({
@@ -387,6 +457,7 @@ async function main() {
     ProductVariant: variantCount,
     ProductImage: imageCount,
     ProductCategory: productCategoryCount,
+    AdminUser: adminUserCount,
   });
 }
 

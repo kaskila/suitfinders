@@ -8,3 +8,7 @@ export function formatPrice(amount: number): string {
   }).format(amount);
   return `ZMW ${formatted}`;
 }
+
+export function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat("en-ZM", { dateStyle: "medium" }).format(date);
+}

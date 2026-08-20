@@ -10,6 +10,7 @@
 import type {
   BrandModel,
   CategoryModel,
+  CustomRequestModel,
   ProductImageModel,
   ProductModel,
   ProductVariantModel,
@@ -57,4 +58,19 @@ export interface ProductDetail extends Pick<ProductModel, "id" | "slug" | "name"
   variants: ProductVariantView[];
   priceRange: { min: number; max: number };
   inStock: boolean;
+}
+
+/** Row view used in the admin request inbox. */
+export interface CustomRequestListItem
+  extends Pick<
+    CustomRequestModel,
+    "id" | "createdAt" | "contactName" | "contactPhone" | "contactWhatsapp" | "description"
+  > {
+  /** The linked variant's product name and size, or null for an open request. */
+  product: { name: string; size: string } | null;
+  /** Display label (e.g. "Wedding"), not the raw enum value. */
+  occasion: string | null;
+  /** Converted from Prisma.Decimal in the data layer. */
+  budgetMin: number | null;
+  budgetMax: number | null;
 }

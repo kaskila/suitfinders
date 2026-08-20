@@ -251,3 +251,82 @@ model CustomRequestImage {
 
   @@index([customRequestId])
 }
+
+// ---------------------------------------------------------------------------
+// Admin authentication (Better Auth)
+//
+// Entirely separate from the domain model's User/Admin above: these tables
+// back the single seeded admin login for /admin and nothing else. Generated
+// by `better-auth generate` against src/lib/auth/auth.ts's modelName
+// overrides, which is why they're named Admin* rather than the framework's
+// defaults (User/Session/Account/Verification) — that naming is what keeps
+// this from colliding with, or ever touching, the domain User model.
+// ---------------------------------------------------------------------------
+
+model AdminUser {
+  id            String         @id
+  name          String
+  email         String
+  emailVerified Boolean        @default(false)
+  image         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  adminsessions AdminSession[]
+  adminaccounts AdminAccount[]
+
+  @@unique([email])
+  @@map("AdminUser")
+}
+
+model AdminSession {
+  id        String    @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  adminuser AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("AdminSession")
+}
+
+model AdminAccount {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  // Required by better-auth's core Account schema (not present in the
+  // schema the deprecated @better-auth/cli generator produced, which
+  // predates the 1.7 "account identity is scoped by issuer" change) — the
+  // credential sign-in lookup filters on this column, so it must exist.
+  issuer                String
+  userId                String
+  adminuser             AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("AdminAccount")
+}
+
+model AdminVerification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("AdminVerification")
+}
