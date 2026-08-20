@@ -128,6 +128,31 @@ system, using Zod:
   diagnose, without logging secrets or full user input containing
   sensitive data.
 
+## Request Notification Behaviour
+
+Submitting a `CustomRequest` triggers an outbound notification (email) to
+alert the team that a new buyer request has arrived.
+
+- The notification is fire-and-forget: it is dispatched after the
+  `CustomRequest` row is successfully written, and its outcome does not
+  affect the response returned to the buyer.
+- Notification delivery failure must never block or fail the request
+  write — the buyer's request is saved, and the buyer sees success,
+  regardless of whether the notification succeeds.
+- Failures are logged server-side only; they are never surfaced to the
+  buyer and never retried as part of the request-submission flow.
+
+Implementation constraint: the notification send MUST be awaited inside a
+try/catch within the Server Action, not dispatched as an un-awaited
+promise. Vercel's serverless runtime may terminate the function container
+once the action returns, killing any in-flight un-awaited work — the
+email would silently never send with no error anywhere. "Fire-and-forget"
+here means the buyer is unaffected by the outcome, NOT that the send is
+unawaited.
+
+If latency later becomes a problem, the correct upgrade is Vercel's
+waitUntil() or a queue, not an un-awaited promise.
+
 ## Security Principles
 
 - Secrets and credentials are never hardcoded and never exposed to the
