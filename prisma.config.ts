@@ -9,7 +9,11 @@ export default defineConfig({
     path: "prisma/migrations",
     seed: "tsx prisma/seed.ts",
   },
+  // CLI-only (migrate, validate, db pull, studio). The app's PrismaClient
+  // is constructed directly from DATABASE_URL in src/lib/db/prisma.ts and
+  // never reads this config, so this must be the direct (non-pooled)
+  // connection — migrations must never run over a pooled connection.
   datasource: {
-    url: process.env["DATABASE_URL"],
+    url: process.env["DIRECT_DATABASE_URL"],
   },
 });
