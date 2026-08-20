@@ -147,6 +147,11 @@ made about, via a nullable `productVariantId`, covering the "I want
 this specific suit" case without a separate order/inquiry model. See
 Deletion Semantics for the required on-delete behaviour.
 
+Holds `adminNotes` (nullable text): free-form notes an admin accumulates
+while working a request — contact attempts, vendor conversations,
+anything not captured by `status` alone. Not structured or validated;
+it is a running log, not a domain fact.
+
 **CustomRequestImage**
 A reference image belonging to a CustomRequest (e.g. fabric or fit
 inspiration). Stores only an external storage reference, never binary
@@ -221,6 +226,8 @@ buyer entered `09…`, `260…`, or `+260…`.
 - `CustomRequest.productVariantId` is nullable.
 - `CustomRequest.occasion`, once added, is a fixed enum (Wedding,
   Business, Funeral, Church, Other) — not free text.
+- `CustomRequest.adminNotes` is nullable free text — no structure or
+  validation is imposed on it.
 - `User.name` is optional.
 - `Customer.phone` is required.
 - `Vendor.businessName` is required; `Vendor.contactInfo` is optional.
@@ -238,10 +245,22 @@ buyer entered `09…`, `260…`, or `+260…`.
   - prevents its products from being newly published;
   - removes/excludes its products from appearing as available catalog
     listings.
-- **CustomRequest.status**: represents the bespoke-request workflow
-  (e.g. submitted → reviewing → quoted → accepted → in progress →
-  completed, with a cancelled branch). Exact state set is an
-  implementation detail, not fixed by this document.
+- **CustomRequest.status**: represents the pipeline we actually operate,
+  which is manual brokering between buyer and vendor, not a bespoke
+  fulfillment workflow. An earlier version of this document specified
+  submitted → reviewing → quoted → accepted → in progress → completed
+  (with a cancelled branch); that was designed for a workflow SuitFinders
+  is not running, and has been replaced with the states that actually
+  occur:
+  - **NEW** — the request has been submitted and not yet actioned by an
+    admin.
+  - **CONTACTED** — an admin has reached out to the buyer (and/or a
+    candidate vendor) to clarify or progress the request.
+  - **MATCHED** — a vendor/product has been connected to the buyer; the
+    admin's brokering work on this request is effectively done.
+  - **CLOSED** — the request reached a successful conclusion (terminal).
+  - **LOST** — the request did not convert — the buyer went cold, no
+    vendor could be matched, or the buyer declined (terminal).
 - **Archiving over deletion**: Products and ProductVariants are
   soft-deleted/archived rather than hard-deleted whenever historical
   references (CustomRequests that named them) exist, preserving
@@ -336,6 +355,12 @@ must not be introduced without a separate decision:
   enum) — all admins currently share one authorization scope
 - A structured/multi-field Vendor contact record — `Vendor.contactInfo`
   is a single free-text field for MVP
+- Commission and vendor payouts — deliberately not modelled yet. We do
+  not know the rate we will charge, and a field for it (commission
+  percentage, payout amount, payout status) would sit unenforced and
+  unused, misleading anyone reading the schema into thinking a
+  commission model already exists. This is introduced once the rate is
+  actually decided, not speculatively ahead of that decision.
 
 Order and OrderItem, present in an earlier version of this model, have
 been removed rather than kept in a payments-less form. Payments are out

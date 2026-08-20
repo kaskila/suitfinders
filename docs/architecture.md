@@ -68,6 +68,13 @@ system, using Zod:
 - Uploaded files (product images, custom-request images) are validated
   for type/size at the upload boundary before a storage reference is
   persisted.
+- Cloudinary's signed upload API has no parameter to cap file size at
+  upload time — only `allowed_formats` is enforced then. Because of
+  that, `verifyUploadedAsset()` (`src/lib/cloudinary.ts`) must be called
+  after every admin image upload completes: it re-checks the asset
+  against Cloudinary's own record (not the client's claim) and deletes
+  it if it exceeds the 5MB limit. An upload is not considered validated
+  until this check has run.
 - Validation failures are rejected before reaching data-access code;
   data-access code is not responsible for re-validating shape.
 
