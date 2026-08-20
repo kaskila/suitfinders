@@ -7,7 +7,7 @@
  * catalog visibility rule from docs/architecture.md; it is enforced here,
  * once, rather than re-implemented at each call site.
  */
-import { ProductStatus, VendorStatus } from "@/generated/prisma/enums";
+import { ProductStatus, ProductVariantStatus, VendorStatus } from "@/generated/prisma/enums";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import type { ProductCard, ProductDetail, ProductImageView, ProductVariantView } from "@/lib/types";
@@ -148,4 +148,41 @@ export async function getProductBySlug(slug: string): Promise<ProductDetail | nu
     select: detailSelect,
   });
   return product ? toProductDetail(product) : null;
+}
+
+/** In-stock, active variant sizes for a published product from an active vendor. */
+export async function getAvailableSizes(slug: string): Promise<string[]> {
+  const product = await prisma.product.findFirst({
+    where: { ...publishedFromActiveVendor, slug },
+    select: {
+      variants: {
+        where: { status: ProductVariantStatus.ACTIVE, stock: { gt: 0 } },
+        select: { size: true },
+        orderBy: { size: "asc" },
+      },
+    },
+  });
+  if (!product) return [];
+  // A product's variants can share a size across colours; the request
+  // form only asks for size, so dedupe to the sizes themselves.
+  return Array.from(new Set(product.variants.map((variant) => variant.size)));
+}
+
+/**
+ * Resolves a (product, size) pair to the ProductVariant it identifies.
+ * Only matches in-stock, active variants of published products from active
+ * vendors — the same purchasable set getAvailableSizes offers.
+ */
+export async function resolveVariantId(slug: string, size: string): Promise<string | null> {
+  const variant = await prisma.productVariant.findFirst({
+    where: {
+      size,
+      status: ProductVariantStatus.ACTIVE,
+      stock: { gt: 0 },
+      product: { slug, ...publishedFromActiveVendor },
+    },
+    select: { id: true },
+    orderBy: { id: "asc" },
+  });
+  return variant?.id ?? null;
 }

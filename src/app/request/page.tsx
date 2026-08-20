@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Container } from "@/components/container";
 import { RequestForm } from "@/components/request-form";
 import { formatPrice } from "@/lib/data/format";
-import { getProductBySlug } from "@/lib/data/products";
+import { getAvailableSizes, getProductBySlug } from "@/lib/data/products";
 
 export const metadata: Metadata = {
   title: "Request a Suit | SuitFinders",
@@ -18,6 +18,7 @@ export default async function RequestPage({ searchParams }: PageProps<"/request"
   const slug = typeof productParam === "string" ? productParam : undefined;
   // An invalid or unknown slug is ignored silently — the form just renders blank.
   const product = slug ? await getProductBySlug(slug) : null;
+  const availableSizes = product ? await getAvailableSizes(product.slug) : [];
 
   const primaryImage = product?.images[0] ?? null;
   const priceLabel = product
@@ -63,7 +64,7 @@ export default async function RequestPage({ searchParams }: PageProps<"/request"
           </div>
         ) : null}
 
-        <RequestForm productSlug={product?.slug} />
+        <RequestForm productSlug={product?.slug} availableSizes={availableSizes} />
       </Container>
     </section>
   );

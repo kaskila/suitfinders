@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm, useWatch, type SubmitHandler } from "react-hook-form";
 
+import { submitCustomRequest } from "@/app/request/actions";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -24,13 +25,24 @@ import {
   type RequestFormValues,
 } from "@/lib/validation/request";
 
-function RequestForm({ productSlug }: { productSlug?: string }) {
+function RequestForm({
+  productSlug,
+  availableSizes = [],
+}: {
+  productSlug?: string;
+  availableSizes?: string[];
+}) {
+  const hasProduct = Boolean(productSlug);
   const [submitted, setSubmitted] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const {
     register,
     handleSubmit,
     control,
+    getValues,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<RequestFormInput, unknown, RequestFormValues>({
     resolver: zodResolver(requestFormSchema),
@@ -50,11 +62,29 @@ function RequestForm({ productSlug }: { productSlug?: string }) {
 
   const whatsappSame = useWatch({ control, name: "whatsappSame" });
 
-  const onSubmit: SubmitHandler<RequestFormValues> = (data) => {
-    // TODO: replace with a Server Action when the data layer is wired in.
-    // The validated payload shape is final.
-    console.log(data);
-    setSubmitted(true);
+  const onSubmit: SubmitHandler<RequestFormValues> = () => {
+    setFormError(null);
+    // The server performs the real parse/normalisation; send the raw
+    // (pre-transform) input rather than the client's already-transformed
+    // output — the client's validation is a courtesy, not the control.
+    const raw = getValues();
+
+    startTransition(async () => {
+      const result = await submitCustomRequest(raw);
+
+      if (result.ok) {
+        setSubmitted(true);
+        return;
+      }
+
+      for (const [field, message] of Object.entries(result.errors)) {
+        if (field === "form") {
+          setFormError(message);
+        } else {
+          setError(field as keyof RequestFormInput, { type: "server", message });
+        }
+      }
+    });
   };
 
   if (submitted) {
@@ -164,8 +194,45 @@ function RequestForm({ productSlug }: { productSlug?: string }) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="size">Size (optional)</Label>
-        <Input id="size" placeholder="e.g. 40R" {...register("size")} />
+        <Label htmlFor="size">{hasProduct ? "Size" : "Size (optional)"}</Label>
+        {hasProduct ? (
+          <Controller
+            control={control}
+            name="size"
+            render={({ field }) => (
+              <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                <SelectTrigger
+                  id="size"
+                  className="w-full"
+                  aria-invalid={!!errors.size}
+                  aria-describedby={errors.size ? "size-error" : undefined}
+                >
+                  <SelectValue placeholder="Select a size" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableSizes.map((size) => (
+                    <SelectItem key={size} value={size}>
+                      {size}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+        ) : (
+          <Input
+            id="size"
+            placeholder="e.g. 40R"
+            {...register("size")}
+            aria-invalid={!!errors.size}
+            aria-describedby={errors.size ? "size-error" : undefined}
+          />
+        )}
+        {errors.size ? (
+          <p id="size-error" className="text-sm text-destructive">
+            {errors.size.message}
+          </p>
+        ) : null}
       </div>
 
       <div className="space-y-2">
@@ -234,13 +301,19 @@ function RequestForm({ productSlug }: { productSlug?: string }) {
         />
       </div>
 
+      {formError ? (
+        <p role="alert" className="text-sm text-destructive">
+          {formError}
+        </p>
+      ) : null}
+
       <Button
         type="submit"
         size="lg"
         className="h-12 w-full px-8 text-base sm:w-auto"
-        disabled={isSubmitting}
+        disabled={isSubmitting || isPending}
       >
-        Send Request
+        {isPending ? "Sending…" : "Send Request"}
       </Button>
     </form>
   );
