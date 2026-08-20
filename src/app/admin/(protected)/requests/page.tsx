@@ -1,13 +1,25 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Container } from "@/components/container";
 import { formatDate, formatPrice } from "@/lib/data/format";
-import { getRequests } from "@/lib/data/requests";
+import { listRequests } from "@/lib/data/admin/requests";
 import type { CustomRequestListItem } from "@/lib/types";
+import type { CustomRequestStatus } from "@/generated/prisma/enums";
+
+import { RequestControls } from "./request-controls";
 
 export const metadata: Metadata = {
   title: "Requests | SuitFinders Admin",
+};
+
+const STATUS_VARIANT: Record<CustomRequestStatus, "default" | "secondary" | "outline" | "destructive"> = {
+  NEW: "secondary",
+  CONTACTED: "outline",
+  MATCHED: "default",
+  CLOSED: "secondary",
+  LOST: "destructive",
 };
 
 function budgetLabel(min: number | null, max: number | null): string | null {
@@ -27,17 +39,28 @@ function whatsAppUrl(request: CustomRequestListItem): string {
   return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 }
 
-export default async function AdminRequestsPage() {
-  const requests = await getRequests();
+export default async function AdminRequestsPage({ searchParams }: PageProps<"/admin/requests">) {
+  const params = await searchParams;
+  const showAll = params.all === "1";
+  const requests = await listRequests({ showAll });
 
   return (
-    <section className="py-16 sm:py-20">
-      <Container className="max-w-3xl space-y-8">
-        <div className="space-y-2">
-          <h1 className="font-heading text-3xl text-foreground">Requests</h1>
-          <p className="text-sm text-muted-foreground">
-            {requests.length} {requests.length === 1 ? "request" : "requests"}
-          </p>
+    <section className="py-10">
+      <Container className="max-w-3xl space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="font-heading text-2xl text-foreground">Requests</h1>
+            <p className="text-sm text-muted-foreground">
+              {requests.length} {requests.length === 1 ? "request" : "requests"}
+              {showAll ? "" : " (closed & lost hidden)"}
+            </p>
+          </div>
+          <Link
+            href={showAll ? "/admin/requests" : "/admin/requests?all=1"}
+            className="text-sm font-medium text-foreground underline-offset-4 outline-none hover:text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            {showAll ? "Hide closed & lost" : "Show all"}
+          </Link>
         </div>
 
         {requests.length === 0 ? (
@@ -45,11 +68,14 @@ export default async function AdminRequestsPage() {
         ) : (
           <ul className="divide-y divide-border border-y border-border">
             {requests.map((request) => (
-              <li key={request.id} className="space-y-3 py-6">
+              <li key={request.id} className="space-y-3 py-5">
                 <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                  <p className="font-sans text-base font-medium text-foreground">
-                    {request.contactName}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-sans text-base font-medium text-foreground">
+                      {request.contactName}
+                    </p>
+                    <Badge variant={STATUS_VARIANT[request.status]}>{request.status}</Badge>
+                  </div>
                   <p className="text-xs text-muted-foreground">{formatDate(request.createdAt)}</p>
                 </div>
 
@@ -80,6 +106,8 @@ export default async function AdminRequestsPage() {
                 >
                   Message on WhatsApp
                 </a>
+
+                <RequestControls id={request.id} status={request.status} adminNotes={request.adminNotes} />
               </li>
             ))}
           </ul>

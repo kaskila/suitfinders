@@ -7,6 +7,7 @@
  * converted to a plain `number` in the data layer (see lib/data/products.ts)
  * before it ever reaches a view model or a component.
  */
+import type { CustomRequestStatus } from "@/generated/prisma/enums";
 import type {
   BrandModel,
   CategoryModel,
@@ -70,6 +71,9 @@ export interface CustomRequestListItem
   product: { name: string; size: string } | null;
   /** Display label (e.g. "Wedding"), not the raw enum value. */
   occasion: string | null;
+  status: CustomRequestStatus;
+  /** Free-form working notes; not structured or validated (see domain-model.md). */
+  adminNotes: string | null;
   /** Converted from Prisma.Decimal in the data layer. */
   budgetMin: number | null;
   budgetMax: number | null;
