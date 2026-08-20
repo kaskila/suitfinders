@@ -33,13 +33,11 @@ enum VendorStatus {
 }
 
 enum CustomRequestStatus {
-  SUBMITTED
-  REVIEWING
-  QUOTED
-  ACCEPTED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
+  NEW
+  CONTACTED
+  MATCHED
+  CLOSED
+  LOST
 }
 
 enum RequestOccasion {
@@ -222,11 +220,12 @@ model CustomRequest {
   productVariantId String?
   size             String?
   occasion         RequestOccasion?
-  status           CustomRequestStatus @default(SUBMITTED)
+  status           CustomRequestStatus @default(NEW)
   description      String
   budgetMin        Decimal?            @db.Decimal(12, 2)
   budgetMax        Decimal?            @db.Decimal(12, 2)
   measurements     Json
+  adminNotes       String?
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
 
