@@ -12,6 +12,8 @@ import { signOutAdmin } from "./actions";
 const ADMIN_NAV_LINKS = [
   { href: "/admin/requests", label: "Requests" },
   { href: "/admin/products", label: "Products" },
+  { href: "/admin/vendors", label: "Vendors" },
+  { href: "/admin/brands", label: "Brands" },
 ] as const;
 
 /** The admin shell's top bar — denser than the public header, same design tokens and active-link pattern. */
